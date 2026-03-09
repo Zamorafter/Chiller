@@ -1,19 +1,26 @@
+// ui.js
+// Variables globales
 let chillerActual = 1;
 let registroActual = null;
 let currentUser = getCurrentUser();
 
+// Inicialización al cargar la página
 document.addEventListener('DOMContentLoaded', () => {
+    // Verificar sesión
     if (!currentUser) {
         window.location.href = 'login.html';
         return;
     }
 
+    // Obtener número de chiller de la URL (ej. ?chiller=1)
     const params = new URLSearchParams(window.location.search);
     chillerActual = parseInt(params.get('chiller')) || 1;
     document.getElementById('chiller-titulo').innerText = `Chiller ${chillerActual}`;
 
+    // Fecha actual en formato YYYY-MM-DD
     const hoy = new Date().toISOString().split('T')[0];
 
+    // Cargar registro existente o crear uno vacío
     let existente = cargarRegistro(currentUser.username, hoy, chillerActual);
     if (existente) {
         registroActual = existente;
@@ -21,13 +28,15 @@ document.addEventListener('DOMContentLoaded', () => {
         registroActual = crearRegistroVacio(currentUser.username, hoy, chillerActual);
     }
 
+    // Renderizar los tres formularios
     renderizarFormularioVoltaje();
     renderizarFormularioNocturno();
     renderizarFormularioDiurno();
 
+    // Cargar los valores guardados en los inputs
     cargarValoresEnFormularios();
 
-    // Pestañas
+    // Configurar pestañas
     document.querySelectorAll('.tab-button').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
@@ -38,10 +47,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+/* -------------------------------------------------------------------------- */
+/* Renderizado de formularios                                                 */
+/* -------------------------------------------------------------------------- */
+
 function renderizarFormularioVoltaje() {
     const contenedor = document.getElementById('formVoltaje');
-    contenedor.innerHTML = '';
+    contenedor.innerHTML = ''; // Limpiar
 
+    // Definir momentos según el chiller
     const momentos = chillerActual === 1 ? [
         '05:00 (OP)', '08:30 (F)', '11:00 (F)', '14:00 (OP)', '16:00 (F)', '18:00 (OP)',
         '19:00 (OP)', '20:00 (F)', '21:00 (F)', '22:00 (OP)', '23:00 (F)', '00:00 (OP)', '01:00 (OP)'
@@ -50,8 +64,10 @@ function renderizarFormularioVoltaje() {
         '19:00 (OP)', '20:00 (F)', '21:00 (F)', '22:00 (OP)', '23:00 (F)', '00:00 (OP)', '01:00 (OP)'
     ];
 
+    // Crear campos para cada momento
     momentos.forEach(momento => {
-        const idBase = `v_ch${chillerActual}_${momento.replace(/[^a-zA-Z0-9]/g,'_')}`;
+        // Crear un ID base seguro (reemplazar caracteres especiales)
+        const idBase = `v_ch${chillerActual}_${momento.replace(/[^a-zA-Z0-9]/g, '_')}`;
         const div = document.createElement('div');
         div.className = 'grid-form';
         div.innerHTML = `
@@ -72,6 +88,7 @@ function renderizarFormularioVoltaje() {
         contenedor.appendChild(div);
     });
 
+    // Campos adicionales
     const extras = document.createElement('div');
     extras.className = 'grid-form';
     extras.innerHTML = `
@@ -113,10 +130,12 @@ function renderizarFormularioNocturno() {
                         <th>00:00</th>
                     </tr>
                 </thead>
-                <tbody id="tablaNocturnoBody"></tbody>
+                <tbody id="tablaNocturnoBody">
+                </tbody>
             </table>
         </div>
     `;
+
     const tbody = document.getElementById('tablaNocturnoBody');
     const filas = [
         ['EVAPORADOR', 'Temp. Salida', 'ºF'],
@@ -134,8 +153,9 @@ function renderizarFormularioNocturno() {
         ['', 'Presión de aceite', 'PSIG'],
         ['', 'SURGE', '-']
     ];
+
     filas.forEach((fila, idx) => {
-        let tr = document.createElement('tr');
+        const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${fila[0]}</td>
             <td>${fila[1]}</td>
@@ -150,6 +170,7 @@ function renderizarFormularioNocturno() {
         tbody.appendChild(tr);
     });
 
+    // Campos extras nocturno
     const extras = document.createElement('div');
     extras.className = 'grid-form';
     extras.innerHTML = `
@@ -187,16 +208,30 @@ function renderizarFormularioDiurno() {
                         <th>Componente</th>
                         <th>Item</th>
                         <th>UND</th>
-                        ${chillerActual === 1 ? 
-                            '<th>05:00 (OP)</th><th>07:30 (OP)</th><th>08:30 (F)</th><th>10:00 (F)</th><th>11:00 (F)</th><th>14:00 (OP)</th><th>16:00 (F)</th><th>18:00 (OP)</th>' :
-                            '<th>06:30 (OP)</th><th>07:30 (OP)</th><th>08:30 (F)</th><th>10:00 (F)</th><th>11:00 (F)</th><th>14:00 (OP)</th><th>16:00 (F)</th><th>18:00 (OP)</th>'
-                        }
+                        <th>05:00 (OP)</th>
+                        <th>07:30 (OP)</th>
+                        <th>08:30 (F)</th>
+                        <th>10:00 (F)</th>
+                        <th>11:00 (F)</th>
+                        <th>14:00 (OP)</th>
+                        <th>16:00 (F)</th>
+                        <th>18:00 (OP)</th>
+                        <th>06:30 (OP)</th>
+                        <th>07:30 (OP)</th>
+                        <th>08:30 (F)</th>
+                        <th>10:00 (F)</th>
+                        <th>11:00 (F)</th>
+                        <th>14:00 (OP)</th>
+                        <th>16:00 (F)</th>
+                        <th>18:00 (OP)</th>
                     </tr>
                 </thead>
-                <tbody id="tablaDiurnoBody"></tbody>
+                <tbody id="tablaDiurnoBody">
+                </tbody>
             </table>
         </div>
     `;
+
     const tbody = document.getElementById('tablaDiurnoBody');
     const filas = [
         ['EVAPORADOR', 'Temp. Salida', 'ºF'],
@@ -214,64 +249,77 @@ function renderizarFormularioDiurno() {
         ['', 'Presión de aceite', 'PSIG'],
         ['', 'SURGE', '-']
     ];
-    const horas = chillerActual === 1 ? 
-        ['05h', '07h30', '08h30', '10h', '11h', '14h', '16h', '18h'] :
-        ['06h30', '07h30', '08h30', '10h', '11h', '14h', '16h', '18h'];
-    
+
+    // 18 columnas de horas (8 para Ch1, 8 para Ch3, más las fijas)
+    const horasCount = 16; // 8+8
     filas.forEach((fila, idx) => {
         let tr = document.createElement('tr');
-        let celdas = `<td>${fila[0]}</td><td>${fila[1]}</td><td>${fila[2]}</td>`;
-        horas.forEach(hora => {
-            celdas += `<td><input type="number" step="0.1" id="diur_${idx}_${hora}"></td>`;
-        });
-        tr.innerHTML = celdas;
+        let html = `
+            <td>${fila[0]}</td>
+            <td>${fila[1]}</td>
+            <td>${fila[2]}</td>
+        `;
+        // Generar 16 inputs con IDs únicos
+        for (let h = 0; h < 16; h++) {
+            const horaId = `diurno_${idx}_h${h}`;
+            html += `<td><input type="number" step="0.1" id="${horaId}"></td>`;
+        }
+        tr.innerHTML = html;
         tbody.appendChild(tr);
     });
 
+    // Campos extras diurno
     const extras = document.createElement('div');
     extras.className = 'grid-form';
     extras.innerHTML = `
         <div class="form-group">
             <label>Temperatura Ambiente</label>
-            <input type="number" step="0.1" id="temp_amb_diur">
+            <input type="number" step="0.1" id="temp_amb_diurno">
         </div>
         <div class="form-group">
             <label>Observaciones</label>
-            <input type="text" id="obs_diur">
+            <input type="text" id="obs_diurno">
         </div>
         <div class="form-group">
             <label>Técnico Diurno</label>
-            <input type="text" id="tec_diur">
+            <input type="text" id="tec_diurno">
         </div>
         <div class="form-group">
             <label>Elaborado por</label>
-            <input type="text" id="elab_diur">
+            <input type="text" id="elab_diurno">
         </div>
         <div class="form-group">
             <label>Supervisor</label>
-            <input type="text" id="sup_diur">
+            <input type="text" id="sup_diurno">
         </div>
     `;
     contenedor.appendChild(extras);
 }
 
+/* -------------------------------------------------------------------------- */
+/* Carga de valores guardados en los inputs                                   */
+/* -------------------------------------------------------------------------- */
+
 function cargarValoresEnFormularios() {
     if (!registroActual) return;
-    // Voltaje
+
+    // Cargar voltaje
     if (registroActual.voltaje) {
         Object.keys(registroActual.voltaje).forEach(id => {
             const input = document.getElementById(id);
             if (input) input.value = registroActual.voltaje[id];
         });
     }
-    // Nocturno
+
+    // Cargar nocturno
     if (registroActual.nocturno) {
         Object.keys(registroActual.nocturno).forEach(id => {
             const input = document.getElementById(id);
             if (input) input.value = registroActual.nocturno[id];
         });
     }
-    // Diurno
+
+    // Cargar diurno
     if (registroActual.diurno) {
         Object.keys(registroActual.diurno).forEach(id => {
             const input = document.getElementById(id);
@@ -280,68 +328,91 @@ function cargarValoresEnFormularios() {
     }
 }
 
-function recogerValoresDeFormularios() {
-    // Voltaje
-    const voltaje = {};
-    document.querySelectorAll('#voltaje input').forEach(input => {
-        if (input.id) voltaje[input.id] = input.value;
-    });
-    registroActual.voltaje = voltaje;
-
-    // Nocturno
-    const nocturno = {};
-    document.querySelectorAll('#nocturno input').forEach(input => {
-        if (input.id) nocturno[input.id] = input.value;
-    });
-    registroActual.nocturno = nocturno;
-
-    // Diurno
-    const diurno = {};
-    document.querySelectorAll('#diurno input').forEach(input => {
-        if (input.id) diurno[input.id] = input.value;
-    });
-    registroActual.diurno = diurno;
-}
+/* -------------------------------------------------------------------------- */
+/* Guardar registro (recolectar valores de todos los inputs)                  */
+/* -------------------------------------------------------------------------- */
 
 function guardarRegistro() {
-    recogerValoresDeFormularios();
-    guardarRegistroEnDB(registroActual); // Llamada a la función de db.js (cuidado con el nombre)
+    // Recolectar voltaje
+    registroActual.voltaje = {};
+    document.querySelectorAll('#formVoltaje input').forEach(input => {
+        if (input.id) registroActual.voltaje[input.id] = input.value;
+    });
+
+    // Recolectar nocturno
+    registroActual.nocturno = {};
+    document.querySelectorAll('#formNocturno input').forEach(input => {
+        if (input.id) registroActual.nocturno[input.id] = input.value;
+    });
+
+    // Recolectar diurno
+    registroActual.diurno = {};
+    document.querySelectorAll('#formDiurno input').forEach(input => {
+        if (input.id) registroActual.diurno[input.id] = input.value;
+    });
+
+    // Guardar en localStorage
+    guardarRegistroEnDB(registroActual);  // Nota: la función se llama guardarRegistro en db.js, pero para evitar conflicto de nombres usamos el alias
     alert('Registro guardado');
 }
 
+// Alias para la función de db.js (si se llama igual, podemos renombrar)
+function guardarRegistroEnDB(registro) {
+    let registros = JSON.parse(localStorage.getItem(REGISTROS_KEY)) || [];
+    let index = registros.findIndex(r => 
+        r.usuario === registro.usuario && 
+        r.fecha === registro.fecha && 
+        r.chiller === registro.chiller
+    );
+    if (index >= 0) {
+        registros[index] = registro;
+    } else {
+        registros.push(registro);
+    }
+    localStorage.setItem(REGISTROS_KEY, JSON.stringify(registros));
+}
+
+/* -------------------------------------------------------------------------- */
+/* Terminar jornada: guarda, genera Excel y comparte/descarga                */
+/* -------------------------------------------------------------------------- */
+
 async function terminarJornada() {
-    // Primero guardar
-    recogerValoresDeFormularios();
+    // Guardar antes de terminar
+    guardarRegistro();
+
+    // Marcar como terminado
     registroActual.terminado = true;
     guardarRegistroEnDB(registroActual);
 
     // Generar Excel
-    try {
-        const blob = await generarExcel(registroActual);
-        const nombreArchivo = `Chiller${chillerActual}_${registroActual.fecha}.xlsx`;
+    const blob = generarExcel(registroActual);
+    const nombreArchivo = `Chiller${chillerActual}_${registroActual.fecha}.xlsx`;
 
-        // Compartir o descargar
-        if (navigator.canShare && navigator.canShare({ files: [new File([blob], nombreArchivo, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })] })) {
+    // Intentar compartir (Web Share API)
+    if (navigator.canShare && navigator.canShare({ files: [new File([blob], nombreArchivo, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })] })) {
+        try {
             await navigator.share({
                 title: 'Registro Chiller',
                 text: 'Adjunto el registro diario',
                 files: [new File([blob], nombreArchivo, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })]
             });
-        } else {
-            // Fallback: descargar
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = nombreArchivo;
-            a.click();
-            URL.revokeObjectURL(url);
-            alert('Archivo guardado. Por favor adjúntalo manualmente a un correo.');
+        } catch (err) {
+            console.error('Error al compartir:', err);
+            // Si el usuario cancela, descargar como fallback
+            descargarArchivo(blob, nombreArchivo);
         }
-    } catch (error) {
-        console.error('Error al generar Excel:', error);
-        alert('Error al generar el archivo Excel. Revisa la consola.');
+    } else {
+        // Fallback: descargar directamente
+        descargarArchivo(blob, nombreArchivo);
+        alert('Archivo guardado. Por favor adjúntalo manualmente a un correo.');
     }
 }
 
-// Nota: La función guardarRegistroEnDB debe estar definida en db.js. 
-// Asegúrate de que en db.js la función se llame igual o ajusta aquí.
+function descargarArchivo(blob, nombre) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombre;
+    a.click();
+    URL.revokeObjectURL(url);
+}
