@@ -9,13 +9,13 @@
 <body class="login-body">
     <div class="login-container">
         <h1>Control de Chillers</h1>
-        <div id="loginForm">
-            <input type="text" id="username" placeholder="Usuario" autocomplete="off">
-            <input type="password" id="password" placeholder="Contraseña">
-            <input type="text" id="nombre" placeholder="Nombre completo (solo registro)">
-            <button onclick="handleLogin()">Iniciar sesión</button>
-            <button onclick="handleRegister()">Registrarse</button>
-        </div>
+       <div id="loginForm">
+    <input type="text" id="nombre" placeholder="Nombre" autocomplete="off">
+    <input type="text" id="apellido" placeholder="Apellido" autocomplete="off">
+    <input type="password" id="password" placeholder="Contraseña">
+    <button onclick="handleRegister()">Registrarse</button>
+    <button onclick="handleLogin()">Iniciar sesión</button>
+</div>
     </div>
     <script src="js/auth.js"></script>
     <script>
@@ -45,4 +45,5 @@
         }
     </script>
 </body>
+
 </html>
