@@ -1,37 +1,54 @@
 const USERS_KEY = 'chiller_users';
 
 function register(nombre, apellido, password) {
+
     let users = JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-    // Crear un username único (ej. nombre.apellido)
+
+    // Crear username automático
     const username = `${nombre.toLowerCase()}.${apellido.toLowerCase()}`;
+
     if (users.find(u => u.username === username)) {
         alert('Ya existe un usuario con ese nombre y apellido');
         return false;
     }
-    users.push({ 
-        username, 
-        nombre, 
-        apellido, 
-        password // En producción debería hashearse
-    });
+
+    const newUser = {
+        username: username,
+        nombre: nombre,
+        apellido: apellido,
+        password: password
+    };
+
+    users.push(newUser);
+
     localStorage.setItem(USERS_KEY, JSON.stringify(users));
+
     return true;
 }
 
-function login(nombre, apellido, password) {
+
+function login(username, password) {
+
     let users = JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-    const username = `${nombre.toLowerCase()}.${apellido.toLowerCase()}`;
-    let user = users.find(u => u.username === username && u.password === password);
+
+    let user = users.find(u =>
+        u.username === username.toLowerCase() &&
+        u.password === password
+    );
+
     if (user) {
         sessionStorage.setItem('currentUser', JSON.stringify(user));
         return true;
     }
+
     return false;
 }
+
 
 function cerrarSesion() {
     sessionStorage.removeItem('currentUser');
 }
+
 
 function getCurrentUser() {
     return JSON.parse(sessionStorage.getItem('currentUser'));
