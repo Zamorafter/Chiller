@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro - Chiller App</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="login-body">
+
+<div class="login-container">
+
+<h1>Crear Cuenta</h1>
+
+<input type="text" id="nombre" placeholder="Nombre">
+
+<input type="text" id="apellido" placeholder="Apellido">
+
+<input type="text" id="username" placeholder="Usuario">
+
+<input type="password" id="password" placeholder="Contraseña">
+
+<button onclick="handleRegister()">Registrarse</button>
+
+<p>¿Ya tienes cuenta?</p>
+
+<button onclick="goLogin()">Volver al Login</button>
+
+</div>
+
+<script src="js/auth.js"></script>
+
+<script>
+
+function handleRegister(){
+
+const nombre = document.getElementById("nombre").value
+const apellido = document.getElementById("apellido").value
+const username = document.getElementById("username").value
+const password = document.getElementById("password").value
+
+if(!nombre || !apellido || !username || !password){
+alert("Completa todos los campos")
+return
+}
+
+if(register(username,password,nombre,apellido)){
+alert("Registro exitoso")
+window.location.href="login.html"
+}else{
+alert("El usuario ya existe")
+}
+
+}
+
+function goLogin(){
+window.location.href="login.html"
+}
+
+</script>
+
+</body>
+</html>
