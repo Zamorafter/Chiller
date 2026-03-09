@@ -13,9 +13,18 @@
 
 <h1>Control de Chillers</h1>
 
-<input type="text" id="username" placeholder="Usuario">
+<input 
+type="text" 
+id="username" 
+placeholder="Usuario (ej: juan.perez)" 
+autocomplete="off"
+>
 
-<input type="password" id="password" placeholder="Contraseña">
+<input 
+type="password" 
+id="password" 
+placeholder="Contraseña"
+>
 
 <button onclick="handleLogin()">Iniciar sesión</button>
 
@@ -31,8 +40,13 @@
 
 function handleLogin(){
 
-const username = document.getElementById("username").value
+const username = document.getElementById("username").value.trim().toLowerCase()
 const password = document.getElementById("password").value
+
+if(!username || !password){
+alert("Completa todos los campos")
+return
+}
 
 if(login(username,password)){
 window.location.href="main.html"
