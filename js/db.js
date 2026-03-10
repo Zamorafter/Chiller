@@ -1,7 +1,11 @@
 const REGISTROS_KEY = 'chiller_registros';
 
+function getRegistros() {
+    return JSON.parse(localStorage.getItem(REGISTROS_KEY)) || [];
+}
+
 function guardarRegistro(registro) {
-    let registros = JSON.parse(localStorage.getItem(REGISTROS_KEY)) || [];
+    let registros = getRegistros();
     let index = registros.findIndex(r => 
         r.usuario === registro.usuario && 
         r.fecha === registro.fecha && 
@@ -16,7 +20,7 @@ function guardarRegistro(registro) {
 }
 
 function cargarRegistro(usuario, fecha, chiller) {
-    let registros = JSON.parse(localStorage.getItem(REGISTROS_KEY)) || [];
+    let registros = getRegistros();
     return registros.find(r => 
         r.usuario === usuario && 
         r.fecha === fecha && 

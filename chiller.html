@@ -10,32 +10,27 @@
     <div class="chiller-container">
         <h2 id="chiller-titulo"></h2>
         
-        <!-- Pestañas -->
         <div class="tab-bar">
             <button class="tab-button active" data-tab="voltaje">Voltaje</button>
             <button class="tab-button" data-tab="nocturno">Nocturno</button>
             <button class="tab-button" data-tab="diurno">Diurno</button>
         </div>
 
-        <!-- Contenido Voltaje -->
         <div id="voltaje" class="tab-content active">
             <h3>Medición de Voltaje</h3>
             <form id="formVoltaje"></form>
         </div>
 
-        <!-- Contenido Nocturno -->
         <div id="nocturno" class="tab-content">
             <h3>Registro Nocturno</h3>
             <form id="formNocturno"></form>
         </div>
 
-        <!-- Contenido Diurno -->
         <div id="diurno" class="tab-content">
             <h3>Registro Diurno</h3>
             <form id="formDiurno"></form>
         </div>
 
-        <!-- Botones de acción -->
         <div class="action-buttons">
             <button onclick="guardarRegistro()">Guardar</button>
             <button onclick="terminarJornada()">Terminado</button>

@@ -3,6 +3,7 @@ const urlsToCache = [
   '/chiller-app/',
   '/chiller-app/index.html',
   '/chiller-app/login.html',
+  '/chiller-app/register.html',
   '/chiller-app/main.html',
   '/chiller-app/chiller.html',
   '/chiller-app/css/style.css',

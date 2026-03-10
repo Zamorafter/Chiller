@@ -17,7 +17,6 @@ body {
     color: var(--negro);
 }
 
-/* Login */
 .login-body {
     display: flex;
     justify-content: center;
@@ -58,7 +57,6 @@ body {
     opacity: 0.9;
 }
 
-/* Main */
 .main-container {
     text-align: center;
     padding-top: 2rem;
@@ -99,7 +97,6 @@ body {
     cursor: pointer;
 }
 
-/* Chiller detail */
 .chiller-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -134,7 +131,6 @@ body {
     display: block;
 }
 
-/* Formularios */
 .grid-form {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -155,7 +151,6 @@ body {
     border-radius: 4px;
 }
 
-/* Tablas para nocturno/diurno */
 .horizontal-table {
     overflow-x: auto;
 }

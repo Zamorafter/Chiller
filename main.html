@@ -13,19 +13,18 @@
             <button class="chiller-btn chiller1" onclick="irAChiller(1)">CHILLER 1</button>
             <button class="chiller-btn chiller3" onclick="irAChiller(3)">CHILLER 3</button>
         </div>
-        <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
+        <button class="logout-btn" onclick="cerrarSesion()">Cerrar sesión</button>
     </div>
     <script src="js/auth.js"></script>
     <script>
         function irAChiller(num) {
             window.location.href = `chiller.html?chiller=${num}`;
         }
-        function logout() {
-            cerrarSesion();
+        function cerrarSesion() {
+            logout();
             window.location.href = 'login.html';
         }
-        // Verificar sesión
-        if (!sessionStorage.getItem('currentUser')) {
+        if (!getCurrentUser()) {
             window.location.href = 'login.html';
         }
     </script>
