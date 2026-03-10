@@ -1,3 +1,6 @@
+// ui.js
+// Lógica de interfaz, guardado, redirección y finalización
+
 let chillerActual = 1;
 let registroActual = null;
 let currentUser = getCurrentUser();
@@ -27,6 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     cargarValoresEnFormularios();
 
+    // Configurar el botón de acción según el estado del otro chiller
+    configurarBotonAccion();
+
     document.querySelectorAll('.tab-button').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
@@ -36,6 +42,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+function configurarBotonAccion() {
+    const hoy = new Date().toISOString().split('T')[0];
+    const otroChiller = chillerActual === 1 ? 3 : 1;
+    const registroOtro = cargarRegistro(currentUser.username, hoy, otroChiller);
+    const actionBtn = document.querySelector('.action-buttons button:last-child'); // El botón "Terminado" o "Siguiente"
+
+    if (registroOtro && Object.keys(registroOtro.voltaje).length > 0) {
+        // El otro chiller ya tiene datos, mostramos "Terminado"
+        actionBtn.textContent = 'Terminado';
+        actionBtn.onclick = terminarJornada;
+    } else {
+        // El otro chiller no tiene datos, mostramos "Siguiente"
+        actionBtn.textContent = 'Siguiente';
+        actionBtn.onclick = irAlSiguiente;
+    }
+}
 
 function renderizarFormularioVoltaje() {
     const contenedor = document.getElementById('formVoltaje');
@@ -298,7 +321,12 @@ function cargarValoresEnFormularios() {
     }
 }
 
-function guardarRegistro() {
+function irAlOtroChiller() {
+    const otro = chillerActual === 1 ? 3 : 1;
+    window.location.href = `chiller.html?chiller=${otro}`;
+}
+
+function guardarRegistroActual() {
     registroActual.voltaje = {};
     document.querySelectorAll('#formVoltaje input').forEach(input => {
         if (input.id) registroActual.voltaje[input.id] = input.value;
@@ -315,7 +343,57 @@ function guardarRegistro() {
     });
 
     guardarRegistroEnDB(registroActual);
-    alert('Registro guardado');
+}
+
+function irAlSiguiente() {
+    guardarRegistroActual();
+    alert('Registro guardado. Ahora ve al otro chiller.');
+    irAlOtroChiller();
+}
+
+async function terminarJornada() {
+    // Guardar el registro actual
+    guardarRegistroActual();
+
+    // Cargar el registro del otro chiller
+    const hoy = new Date().toISOString().split('T')[0];
+    const otroChiller = chillerActual === 1 ? 3 : 1;
+    const registroOtro = cargarRegistro(currentUser.username, hoy, otroChiller);
+
+    if (!registroOtro) {
+        alert('No hay datos del otro chiller. Debes llenar ambos.');
+        return;
+    }
+
+    // Combinar ambos registros en un solo objeto
+    const datosCombinados = {
+        chiller1: chillerActual === 1 ? registroActual : registroOtro,
+        chiller3: chillerActual === 3 ? registroActual : registroOtro
+    };
+
+    // Generar Excel con la plantilla
+    const blob = await generarExcel(datosCombinados);
+    const nombreArchivo = `Chillers_${hoy}.xlsx`;
+
+    if (navigator.canShare && navigator.canShare({ files: [new File([blob], nombreArchivo, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })] })) {
+        try {
+            await navigator.share({
+                title: 'Registro de Chillers',
+                text: 'Adjunto el registro completo de ambos chillers',
+                files: [new File([blob], nombreArchivo, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })]
+            });
+            // Opcional: redirigir a main.html o login
+            window.location.href = 'main.html';
+        } catch (err) {
+            console.error('Error al compartir:', err);
+            descargarArchivo(blob, nombreArchivo);
+            window.location.href = 'main.html';
+        }
+    } else {
+        descargarArchivo(blob, nombreArchivo);
+        alert('Archivo guardado. Por favor adjúntalo manualmente a un correo.');
+        window.location.href = 'main.html';
+    }
 }
 
 function guardarRegistroEnDB(registro) {
@@ -331,31 +409,6 @@ function guardarRegistroEnDB(registro) {
         registros.push(registro);
     }
     localStorage.setItem(REGISTROS_KEY, JSON.stringify(registros));
-}
-
-async function terminarJornada() {
-    guardarRegistro();
-    registroActual.terminado = true;
-    guardarRegistroEnDB(registroActual);
-
-    const blob = generarExcel(registroActual);
-    const nombreArchivo = `Chiller${chillerActual}_${registroActual.fecha}.xlsx`;
-
-    if (navigator.canShare && navigator.canShare({ files: [new File([blob], nombreArchivo, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })] })) {
-        try {
-            await navigator.share({
-                title: 'Registro Chiller',
-                text: 'Adjunto el registro diario',
-                files: [new File([blob], nombreArchivo, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })]
-            });
-        } catch (err) {
-            console.error('Error al compartir:', err);
-            descargarArchivo(blob, nombreArchivo);
-        }
-    } else {
-        descargarArchivo(blob, nombreArchivo);
-        alert('Archivo guardado. Por favor adjúntalo manualmente a un correo.');
-    }
 }
 
 function descargarArchivo(blob, nombre) {
