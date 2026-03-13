@@ -1,165 +1,221 @@
 // excel.js
-// Generación de Excel usando plantilla .xlsx con datos de ambos chillers
+// Generación de Excel usando como plantilla el archivo original de chillers
 
 async function generarExcel(datosCombinados) {
     // datosCombinados tiene la forma { chiller1: {...}, chiller3: {...} }
     const { chiller1, chiller3 } = datosCombinados;
 
-    // Cargar la plantilla desde la carpeta libs
-    const response = await fetch('libs/plantilla.xlsx');
+    // Cargar la plantilla original desde la carpeta libs.
+    // IMPORTANTE: solo se van a escribir datos en las hojas
+    // "Dashboard Chiller´s" y "Dashboard Voltaje" para no afectar el resto.
+    const response = await fetch('libs/Copia de 01-Check List - Control valores chillers i.xls');
     const arrayBuffer = await response.arrayBuffer();
     const wb = XLSX.read(arrayBuffer, { type: 'array' });
 
-    // Obtener las hojas
-    const hojaVoltaje = wb.Sheets['Medición Voltaje'];
-    const hojaNocturno = wb.Sheets['NOCTURNO'];
-    const hojaDiurno = wb.Sheets['DIURNO'];
+    // Obtener solo las hojas que se van a modificar
+    const hojaDashboardChiller = wb.Sheets["Dashboard Chiller´s"];
+    const hojaDashboardVoltaje = wb.Sheets['Dashboard Voltaje'];
 
-    // --- MAPEO DE CELDAS PARA VOLTAJE ---
-    // Completa con las direcciones según tu archivo original
-    const mapaVoltaje = {
-        // Chiller 1
-        'v_ch1_05:00_(OP)_l12': 'Q11',
-        'v_ch1_05:00_(OP)_l23': 'R11',
-        'v_ch1_05:00_(OP)_l31': 'S11',
-        // ... todos los campos de voltaje para ch1 y ch3
+    // --- Utilidades para manejar columnas y búsqueda de la siguiente columna libre ---
+    const colNumToLetter = (num) => {
+        let s = '';
+        while (num > 0) {
+            let mod = (num - 1) % 26;
+            s = String.fromCharCode(65 + mod) + s;
+            num = Math.floor((num - 1) / 26);
+        }
+        return s;
     };
 
-    // --- MAPEO PARA NOCTURNO ---
-    const mapaNocturno = {
-        // Chiller 1, 19:00
-        'noct_0_19h': 'E9',   // Temp. Salida
-        'noct_1_19h': 'E10',  // Temp. Retorno
-        // ... etc para ch1 y ch3 (columnas J-O para ch3)
+    const siguienteColumnaLibre = (hoja, filaReferencia, colInicio, colFin) => {
+        // Busca de izquierda a derecha la primera celda vacía en la filaReferencia
+        for (let c = colInicio; c <= colFin; c++) {
+            const colLetra = colNumToLetter(c);
+            const addr = `${colLetra}${filaReferencia}`;
+            const celda = hoja[addr];
+            if (!celda || celda.v === undefined || celda.v === null || celda.v === '') {
+                return c;
+            }
+        }
+        // Si todas tienen algo, usa la última (sobrescribe)
+        return colFin;
     };
 
-    // --- MAPEO PARA DIURNO ---
-    const mapaDiurno = {
-        // Chiller 1, 05:00
-        'diurno_0_h0': 'D9',   // Temp. Salida
-        'diurno_0_h1': 'E9',   // 07:30
-        // ... etc para ch1 y ch3 (columnas L-S para ch3)
+    // Filas base indicadas por el usuario dentro de cada dashboard
+    // (primer renglón de datos que se quiere llenar).
+    const FILA_BASE_CHILLER = 8169;
+    const FILA_BASE_VOLTAJE = 7443;
+
+    // Rango de columnas permitido para llenado continuo
+    // Dashboard Chiller´s: de D a AJ
+    const COL_INICIO_CHILLER = 4;      // D
+    const COL_FIN_CHILLER = 36;        // AJ
+
+    // Dashboard Voltaje: de D a O
+    const COL_INICIO_VOLTAJE = 4;      // D
+    const COL_FIN_VOLTAJE = 15;        // O
+
+    // Filas de referencia donde se escribe FECHA / HORA en cada dashboard
+    // Ajusta estos números a las filas reales de tu archivo.
+    const FILA_FECHA_VOLTAJE = 4;
+    const FILA_HORA_VOLTAJE = 5;
+
+    const FILA_FECHA_CHILLER = 4;
+    const FILA_HORA_CHILLER = 5;
+
+    // Determinar la columna que se va a usar hoy (siguiente libre dentro del rango)
+    const colVoltajeSeleccionada = siguienteColumnaLibre(
+        hojaDashboardVoltaje,
+        FILA_FECHA_VOLTAJE,
+        COL_INICIO_VOLTAJE,
+        COL_FIN_VOLTAJE
+    );
+    const colChillerSeleccionada = siguienteColumnaLibre(
+        hojaDashboardChiller,
+        FILA_FECHA_CHILLER,
+        COL_INICIO_CHILLER,
+        COL_FIN_CHILLER
+    );
+
+    const colVoltajeLetra = colNumToLetter(colVoltajeSeleccionada);
+    const colChillerLetra = colNumToLetter(colChillerSeleccionada);
+
+    // --- MAPEO DE FILAS PARA DASHBOARD VOLTAJE ---
+    // Clave: id de input (como se genera en ui.js)
+    // Valor: número de fila en la hoja "Dashboard Voltaje"
+    // La columna se calculará dinámicamente (de D a O) según la fecha.
+    const mapaDashboardVoltaje = {
+        // Ejemplos de cómo usar la fila base del dashboard de voltaje.
+        // Ajusta o amplía estas filas según tu layout real.
+
+        // Chiller 1, primer bloque de voltaje (por ejemplo 05:00)
+        // Temp. Salida, Temp. Retorno, P. del Evaporador, etc. irían
+        // en filas consecutivas a partir de FILA_BASE_VOLTAJE.
+
+        // 'v_ch1_05_00_OP__l12': FILA_BASE_VOLTAJE,       // Temp. salida
+        // 'v_ch1_05_00_OP__l23': FILA_BASE_VOLTAJE + 1,   // Temp. retorno
+        // 'v_ch1_05_00_OP__l31': FILA_BASE_VOLTAJE + 2,   // P. del evaporador
+
+        // Chiller 3 (mismo patrón, otras filas si corresponde):
+        // 'v_ch3_06_30_OP__l12': FILA_BASE_VOLTAJE + 20,
+        // 'v_ch3_06_30_OP__l23': FILA_BASE_VOLTAJE + 21,
+        // 'v_ch3_06_30_OP__l31': FILA_BASE_VOLTAJE + 22,
     };
 
-    // --- Rellenar celdas de voltaje para Chiller 1 ---
-    if (chiller1 && chiller1.voltaje) {
-        for (let [id, valor] of Object.entries(chiller1.voltaje)) {
-            if (mapaVoltaje[id] && valor !== '') {
-                const direccion = mapaVoltaje[id];
-                let cell = hojaVoltaje[direccion];
+    // --- MAPEO DE FILAS PARA DASHBOARD CHILLER´S ---
+    // Aquí puedes combinar tanto datos nocturnos como diurnos.
+    // Claves: ids de inputs de las pestañas Nocturno y Diurno.
+    // Valor: número de fila donde se debe escribir en "Dashboard Chiller´s".
+    // La columna se calculará dinámicamente (de D a AJ) según la fecha.
+    const mapaDashboardChiller = {
+        // A partir de FILA_BASE_CHILLER se encuentra la fila de
+        // "Temp. Salida, Temp. Retorno, P. Del Evaporador, ..." que
+        // mostraste en la captura del dashboard.
+        //
+        // Cada índice de fila del formulario (`idx` en ui.js) se puede
+        // alinear con una fila consecutiva del dashboard:
+        //
+        //  idx 0 -> FILA_BASE_CHILLER      (Temp. Salida)
+        //  idx 1 -> FILA_BASE_CHILLER + 1  (Temp. Retorno)
+        //  idx 2 -> FILA_BASE_CHILLER + 2  (P. del Evaporador)
+        //  idx 3 -> FILA_BASE_CHILLER + 3  (T. de Saturación)
+        //  ... y así sucesivamente.
+
+        // Ejemplo para los primeros cuatro ítems nocturnos a las 19:00:
+        // 'noct_0_19h': FILA_BASE_CHILLER,
+        // 'noct_1_19h': FILA_BASE_CHILLER + 1,
+        // 'noct_2_19h': FILA_BASE_CHILLER + 2,
+        // 'noct_3_19h': FILA_BASE_CHILLER + 3,
+
+        // Ejemplo para diurno 05:00 (h0) usando la misma línea base:
+        // 'diurno_0_h0': FILA_BASE_CHILLER,
+        // 'diurno_1_h0': FILA_BASE_CHILLER + 1,
+        // 'diurno_2_h0': FILA_BASE_CHILLER + 2,
+        // 'diurno_3_h0': FILA_BASE_CHILLER + 3,
+    };
+
+    // --- Rellenar DASHBOARD VOLTAJE con datos de voltaje de ambos chillers ---
+    const rellenarVoltajeEnDashboard = (chillerDatos) => {
+        if (!chillerDatos || !chillerDatos.voltaje) return;
+        for (let [id, valor] of Object.entries(chillerDatos.voltaje)) {
+            if (mapaDashboardVoltaje[id] && valor !== '') {
+                const fila = mapaDashboardVoltaje[id];
+                const addr = `${colVoltajeLetra}${fila}`;
+                let cell = hojaDashboardVoltaje[addr];
                 if (!cell) {
                     cell = { t: 'n' };
-                    hojaVoltaje[direccion] = cell;
+                    hojaDashboardVoltaje[addr] = cell;
                 }
                 cell.v = parseFloat(valor);
                 cell.t = 'n';
             }
         }
-    }
+    };
 
-    // --- Rellenar celdas de voltaje para Chiller 3 ---
-    if (chiller3 && chiller3.voltaje) {
-        for (let [id, valor] of Object.entries(chiller3.voltaje)) {
-            // Los ids de ch3 deben estar en el mapa con sus coordenadas (ej. columnas W-Y)
-            if (mapaVoltaje[id] && valor !== '') {
-                const direccion = mapaVoltaje[id];
-                let cell = hojaVoltaje[direccion];
-                if (!cell) {
-                    cell = { t: 'n' };
-                    hojaVoltaje[direccion] = cell;
+    rellenarVoltajeEnDashboard(chiller1);
+    rellenarVoltajeEnDashboard(chiller3);
+
+    // --- Rellenar DASHBOARD CHILLER´S con datos nocturnos y diurnos ---
+    const rellenarChillerDashboard = (chillerDatos) => {
+        if (!chillerDatos) return;
+
+        // Nocturno
+        if (chillerDatos.nocturno) {
+            for (let [id, valor] of Object.entries(chillerDatos.nocturno)) {
+                if (mapaDashboardChiller[id] && valor !== '') {
+                    const fila = mapaDashboardChiller[id];
+                    const addr = `${colChillerLetra}${fila}`;
+                    let cell = hojaDashboardChiller[addr];
+                    if (!cell) {
+                        cell = { t: 'n' };
+                        hojaDashboardChiller[addr] = cell;
+                    }
+                    cell.v = parseFloat(valor);
+                    cell.t = 'n';
                 }
-                cell.v = parseFloat(valor);
-                cell.t = 'n';
             }
         }
-    }
 
-    // --- Rellenar celdas nocturno para Chiller 1 (columnas E-I) ---
-    if (chiller1 && chiller1.nocturno) {
-        for (let [id, valor] of Object.entries(chiller1.nocturno)) {
-            if (mapaNocturno[id] && valor !== '') {
-                const direccion = mapaNocturno[id];
-                let cell = hojaNocturno[direccion];
-                if (!cell) {
-                    cell = { t: 'n' };
-                    hojaNocturno[direccion] = cell;
+        // Diurno
+        if (chillerDatos.diurno) {
+            for (let [id, valor] of Object.entries(chillerDatos.diurno)) {
+                if (mapaDashboardChiller[id] && valor !== '') {
+                    const fila = mapaDashboardChiller[id];
+                    const addr = `${colChillerLetra}${fila}`;
+                    let cell = hojaDashboardChiller[addr];
+                    if (!cell) {
+                        cell = { t: 'n' };
+                        hojaDashboardChiller[addr] = cell;
+                    }
+                    cell.v = parseFloat(valor);
+                    cell.t = 'n';
                 }
-                cell.v = parseFloat(valor);
-                cell.t = 'n';
             }
         }
-    }
+    };
 
-    // --- Rellenar celdas nocturno para Chiller 3 (columnas J-O) ---
-    if (chiller3 && chiller3.nocturno) {
-        for (let [id, valor] of Object.entries(chiller3.nocturno)) {
-            // Necesitas un mapa separado para ch3 o usar el mismo con prefijos
-            // Ejemplo: si los ids de ch3 son 'noct_ch3_0_19h', entonces mapear a J9, etc.
-            // Aquí debes adaptar según cómo generes los ids en ui.js
-            // Por simplicidad, asumimos que los ids de ch3 ya están en mapaNocturno con sus coordenadas.
-            if (mapaNocturno[id] && valor !== '') {
-                const direccion = mapaNocturno[id];
-                let cell = hojaNocturno[direccion];
-                if (!cell) {
-                    cell = { t: 'n' };
-                    hojaNocturno[direccion] = cell;
-                }
-                cell.v = parseFloat(valor);
-                cell.t = 'n';
-            }
-        }
-    }
+    rellenarChillerDashboard(chiller1);
+    rellenarChillerDashboard(chiller3);
 
-    // --- Rellenar celdas diurno para Chiller 1 (columnas D-K) ---
-    if (chiller1 && chiller1.diurno) {
-        for (let [id, valor] of Object.entries(chiller1.diurno)) {
-            if (mapaDiurno[id] && valor !== '') {
-                const direccion = mapaDiurno[id];
-                let cell = hojaDiurno[direccion];
-                if (!cell) {
-                    cell = { t: 'n' };
-                    hojaDiurno[direccion] = cell;
-                }
-                cell.v = parseFloat(valor);
-                cell.t = 'n';
-            }
-        }
-    }
+    // --- Insertar fecha y hora en las celdas correspondientes de los dashboards ---
+    const ahora = new Date();
+    const fechaTexto = chiller1?.fecha || chiller3?.fecha || ahora.toISOString().split('T')[0];
+    const horaTexto = `${String(ahora.getHours()).padStart(2, '0')}:${String(ahora.getMinutes()).padStart(2, '0')}`;
 
-    // --- Rellenar celdas diurno para Chiller 3 (columnas L-S) ---
-    if (chiller3 && chiller3.diurno) {
-        for (let [id, valor] of Object.entries(chiller3.diurno)) {
-            // Similarmente, los ids de ch3 deben estar en mapaDiurno
-            if (mapaDiurno[id] && valor !== '') {
-                const direccion = mapaDiurno[id];
-                let cell = hojaDiurno[direccion];
-                if (!cell) {
-                    cell = { t: 'n' };
-                    hojaDiurno[direccion] = cell;
-                }
-                cell.v = parseFloat(valor);
-                cell.t = 'n';
-            }
-        }
-    }
+    // FECHA y HORA se escriben en la columna seleccionada (D..O / D..AJ)
+    const addrFechaVoltaje = `${colVoltajeLetra}${FILA_FECHA_VOLTAJE}`;
+    const addrHoraVoltaje = `${colVoltajeLetra}${FILA_HORA_VOLTAJE}`;
 
-    // --- Insertar fecha en las celdas correspondientes ---
-    const celdasFechaVoltaje = ['O6', 'U6', 'C7', 'I7']; // Ajusta según tu archivo
-    celdasFechaVoltaje.forEach(dir => {
-        let cell = hojaVoltaje[dir];
-        if (!cell) {
-            cell = { t: 's' };
-            hojaVoltaje[dir] = cell;
-        }
-        cell.v = `FECHA: ${chiller1?.fecha || chiller3?.fecha}`;
-        cell.t = 's';
-    });
+    hojaDashboardVoltaje[addrFechaVoltaje] = { t: 's', v: `FECHA: ${fechaTexto}` };
+    hojaDashboardVoltaje[addrHoraVoltaje] = { t: 's', v: `HORA: ${horaTexto}` };
 
-    // También puedes agregar la fecha en las hojas nocturno y diurno
-    // hojaNocturno['A7'] = { t: 's', v: `FECHA: ${chiller1?.fecha}` };
-    // hojaDiurno['A7'] = { t: 's', v: `FECHA: ${chiller1?.fecha}` };
+    const addrFechaChiller = `${colChillerLetra}${FILA_FECHA_CHILLER}`;
+    const addrHoraChiller = `${colChillerLetra}${FILA_HORA_CHILLER}`;
+
+    hojaDashboardChiller[addrFechaChiller] = { t: 's', v: `FECHA: ${fechaTexto}` };
+    hojaDashboardChiller[addrHoraChiller] = { t: 's', v: `HORA: ${horaTexto}` };
 
     // --- Generar archivo Excel ---
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    return new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const wbout = XLSX.write(wb, { bookType: 'xls', type: 'array' });
+    return new Blob([wbout], { type: 'application/vnd.ms-excel' });
 }

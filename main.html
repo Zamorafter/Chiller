@@ -27,6 +27,25 @@
         if (!getCurrentUser()) {
             window.location.href = 'login.html';
         }
+
+        // Preguntar una vez si se quiere descargar la plantilla de Excel al dispositivo
+        document.addEventListener('DOMContentLoaded', () => {
+            const FLAG_DESCARGA = 'plantilla_chiller_descargada';
+            if (!localStorage.getItem(FLAG_DESCARGA)) {
+                const quiere = confirm('¿Quieres descargar el archivo de Excel para usarlo en tu móvil y trabajar de forma local?');
+                if (quiere) {
+                    // Forzar descarga del archivo original de plantilla
+                    const a = document.createElement('a');
+                    a.href = 'libs/Copia de 01-Check List - Control valores chillers i.xls';
+                    a.download = 'Copia de 01-Check List - Control valores chillers i.xls';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    localStorage.setItem(FLAG_DESCARGA, '1');
+                }
+            }
+        });
     </script>
 </body>
 </html>
+

@@ -115,6 +115,13 @@ function renderizarFormularioVoltaje() {
         </div>
     `;
     contenedor.appendChild(extras);
+
+    // Rellenar automáticamente el operador nocturno con el usuario actual
+    const opInput = document.getElementById('op_nocturno');
+    if (opInput && currentUser && currentUser.username) {
+        opInput.value = currentUser.username;
+        opInput.readOnly = true;
+    }
 }
 
 function renderizarFormularioNocturno() {
@@ -371,16 +378,18 @@ async function terminarJornada() {
         chiller3: chillerActual === 3 ? registroActual : registroOtro
     };
 
-    // Generar Excel con la plantilla
+    // Generar Excel con la plantilla.
+    // Se usa siempre el mismo nombre de archivo para que el usuario
+    // pueda sobrescribirlo y trabajar con un único Excel.
     const blob = await generarExcel(datosCombinados);
-    const nombreArchivo = `Chillers_${hoy}.xlsx`;
+    const nombreArchivo = 'Copia de 01-Check List - Control valores chillers i.xls';
 
-    if (navigator.canShare && navigator.canShare({ files: [new File([blob], nombreArchivo, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })] })) {
+    if (navigator.canShare && navigator.canShare({ files: [new File([blob], nombreArchivo, { type: 'application/vnd.ms-excel' })] })) {
         try {
             await navigator.share({
                 title: 'Registro de Chillers',
                 text: 'Adjunto el registro completo de ambos chillers',
-                files: [new File([blob], nombreArchivo, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })]
+                files: [new File([blob], nombreArchivo, { type: 'application/vnd.ms-excel' })]
             });
             // Opcional: redirigir a main.html o login
             window.location.href = 'main.html';
@@ -419,3 +428,4 @@ function descargarArchivo(blob, nombre) {
     a.click();
     URL.revokeObjectURL(url);
 }
+
