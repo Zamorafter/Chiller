@@ -1,0 +1,25 @@
+{
+  "name": "chiller-app",
+  "version": "1.0.0",
+  "description": "��#\u0000 \u0000C\u0000h\u0000i\u0000l\u0000l\u0000e\u0000r\u0000\r\u0000 \u0000\r\u0000 \u0000g\u0000i\u0000t\u0000 \u0000r\u0000e\u0000m\u0000o\u0000t\u0000e\u0000 \u0000a\u0000d\u0000d\u0000 \u0000o\u0000r\u0000i\u0000g\u0000i\u0000n\u0000 \u0000h\u0000t\u0000t\u0000p\u0000s\u0000:\u0000/\u0000/\u0000g\u0000i\u0000t\u0000h\u0000u\u0000b\u0000.\u0000c\u0000o\u0000m\u0000/\u0000Z\u0000a\u0000m\u0000o\u0000r\u0000a\u0000f\u0000t\u0000e\u0000r\u0000/\u0000C\u0000h\u0000i\u0000l\u0000l\u0000e\u0000r\u0000.\u0000g\u0000i\u0000t\u0000\r\u0000 \u0000 \u0000g\u0000i\u0000t\u0000 \u0000b\u0000r\u0000a\u0000n\u0000c\u0000h\u0000 \u0000-\u0000M\u0000 \u0000m\u0000a\u0000i\u0000n\u0000 \u0000\r\u0000 \u0000g\u0000i\u0000t\u0000 \u0000p\u0000u\u0000s\u0000h\u0000 \u0000-\u0000u\u0000 \u0000o\u0000r\u0000i\u0000g\u0000i\u0000n\u0000 \u0000m\u0000a\u0000i\u0000n\u0000",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "test": "node scripts/generate-excel-smoke.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.20.0",
+    "pg": "^8.13.0",
+    "xlsx": "^0.18.5"
+  }
+}

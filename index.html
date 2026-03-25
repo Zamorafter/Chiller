@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chiller App</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#001f3f">
+</head>
+<body>
+    <script>
+        // Redirigir a login si no hay sesión activa
+        if (sessionStorage.getItem('currentUser')) {
+            window.location.href = 'main.html';
+        } else {
+            window.location.href = 'login.html';
+        }
+    </script>
+    <script src="js/pwa.js"></script>
+</body>
+</html>

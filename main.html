@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seleccionar Chiller</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#001f3f">
+</head>
+<body>
+    <div class="main-container">
+        <h1>Selecciona un Chiller</h1>
+        <p class="install-copy">Instala esta app en tu celular para usarla como acceso directo y trabajar con una experiencia mas parecida a una aplicacion.</p>
+        <div class="chiller-buttons">
+            <button class="chiller-btn chiller1" onclick="irAChiller(1)">CHILLER 1</button>
+            <button class="chiller-btn chiller3" onclick="irAChiller(3)">CHILLER 3</button>
+        </div>
+        <button id="installBtn" class="logout-btn" style="display:none; margin-bottom: 1.5rem;">
+            Instalar aplicacion
+        </button>
+        <button class="logout-btn" onclick="cerrarSesion()">Cerrar sesion</button>
+    </div>
+    <script src="js/auth.js"></script>
+    <script src="js/pwa.js"></script>
+    <script>
+        function irAChiller(num) {
+            window.location.href = `chiller.html?chiller=${num}`;
+        }
+
+        function cerrarSesion() {
+            logout();
+            window.location.href = 'login.html';
+        }
+
+        if (!getCurrentUser()) {
+            window.location.href = 'login.html';
+        }
+
+        window.addEventListener('chiller:pwa-install-available', () => {
+            const btn = document.getElementById('installBtn');
+            if (btn) btn.style.display = 'inline-block';
+        });
+
+        const installBtn = document.getElementById('installBtn');
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                const accepted = await window.promptPwaInstall?.();
+                if (accepted) {
+                    installBtn.style.display = 'none';
+                }
+            });
+        }
+
+        window.addEventListener('chiller:pwa-installed', () => {
+            if (installBtn) installBtn.style.display = 'none';
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const flagDescarga = 'plantilla_chiller_descargada';
+            if (!localStorage.getItem(flagDescarga)) {
+                const quiere = confirm('Quieres descargar el archivo Excel en este dispositivo para que la app lo pueda actualizar localmente cuando des "Terminado"?');
+                if (quiere) {
+                    const a = document.createElement('a');
+                    a.href = 'libs/Copia de 01-Check List - Control valores chillers i.xls';
+                    a.download = 'Copia de 01-Check List - Control valores chillers i.xls';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    localStorage.setItem(flagDescarga, '1');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro Chiller</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#001f3f">
+</head>
+<body>
+    <div class="chiller-container">
+        <h2 id="chiller-titulo"></h2>
+        <div id="pendingBanner" class="pending-banner" hidden>
+            <div>
+                <strong>Hay campos pendientes.</strong>
+                <span id="pendingBannerText">Puedes guardar y exportar igual; los espacios vacios quedaran en blanco en el Excel.</span>
+            </div>
+            <button type="button" class="pending-banner-button" onclick="abrirPendientesDesdeBanner()">Ver faltantes</button>
+        </div>
+        
+        <div class="tab-bar">
+            <button class="tab-button active" data-tab="voltaje">Voltaje</button>
+            <button class="tab-button" data-tab="nocturno">Nocturno</button>
+            <button class="tab-button" data-tab="diurno">Diurno</button>
+        </div>
+
+        <div id="voltaje" class="tab-content active">
+            <h3>Medición de Voltaje</h3>
+            <form id="formVoltaje"></form>
+        </div>
+
+        <div id="nocturno" class="tab-content">
+            <h3>Registro Nocturno</h3>
+            <form id="formNocturno"></form>
+        </div>
+
+        <div id="diurno" class="tab-content">
+            <h3>Registro Diurno</h3>
+            <form id="formDiurno"></form>
+        </div>
+
+        <div class="action-buttons">
+            <button onclick="guardarRegistro()">Guardar</button>
+            <button id="btnCambiarChiller" onclick="irAlOtroChiller()">Chiller 3</button>
+            <button id="btnAccionFinal" onclick="terminarJornada()">Terminado</button>
+        </div>
+    </div>
+
+    <div id="modalValidacion" class="modal-overlay" aria-hidden="true">
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+            <div class="modal-header">
+                <h3 id="modalTitulo">Faltan campos por completar</h3>
+                <button class="modal-close" type="button" onclick="cerrarModalValidacion()">×</button>
+            </div>
+            <p class="modal-subtitle">Toca un elemento para ir directamente al campo pendiente.</p>
+            <div id="modalLista" class="modal-list"></div>
+            <div class="modal-actions">
+                <button class="modal-primary" type="button" onclick="irAlPrimerPendiente()">Ir al primero</button>
+                <button class="modal-secondary" type="button" onclick="cerrarModalValidacion()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="libs/xlsx.full.min.js"></script>
+    <script src="js/pwa.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/excel.js"></script>
+    <script src="js/ui.js"></script>
+</body>
+</html>
