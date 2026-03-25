@@ -1,21 +1,21 @@
-const CACHE_NAME = 'chiller-cache-v3';
+const CACHE_NAME = 'chiller-cache-v4';
 const urlsToCache = [
-  '/chiller-app/',
-  '/chiller-app/index.html',
-  '/chiller-app/login.html',
-  '/chiller-app/register.html',
-  '/chiller-app/main.html',
-  '/chiller-app/chiller.html',
-  '/chiller-app/css/style.css',
-  '/chiller-app/js/auth.js',
-  '/chiller-app/js/db.js',
-  '/chiller-app/js/excel.js',
-  '/chiller-app/js/pwa.js',
-  '/chiller-app/js/ui.js',
-  '/chiller-app/libs/xlsx.full.min.js',
-  '/chiller-app/manifest.json',
-  '/chiller-app/icons/icon-192.png',
-  '/chiller-app/icons/icon-512.png'
+  './',
+  './index.html',
+  './login.html',
+  './register.html',
+  './main.html',
+  './chiller.html',
+  './css/style.css',
+  './js/auth.js',
+  './js/db.js',
+  './js/excel.js',
+  './js/pwa.js',
+  './js/ui.js',
+  './libs/xlsx.full.min.js',
+  './manifest.json',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
 self.addEventListener('install', event => {
@@ -38,7 +38,7 @@ self.addEventListener('fetch', event => {
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clonedResponse)).catch(() => {});
           return networkResponse;
         })
-        .catch(() => caches.match('/chiller-app/login.html')))
+        .catch(() => caches.match('./login.html')))
   );
 });
 

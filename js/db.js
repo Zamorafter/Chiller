@@ -2,6 +2,12 @@ function getToken() {
     return sessionStorage.getItem('token');
 }
 
+function getDemoKey(fecha, chiller) {
+    const user = getCurrentUser();
+    const username = user?.username || 'demo';
+    return `demo-registro:${username}:${fecha}:${chiller}`;
+}
+
 async function apiFetchJson(url, options = {}) {
     const token = getToken();
     const headers = Object.assign({}, options.headers || {});
@@ -26,6 +32,11 @@ async function apiFetchJson(url, options = {}) {
 }
 
 async function cargarRegistro(usuario, fecha, chiller) {
+    if (window.DEMO_MODE) {
+        const raw = localStorage.getItem(getDemoKey(fecha, chiller));
+        return raw ? JSON.parse(raw) : null;
+    }
+
     // usuario se mantiene para compatibilidad, pero el servidor usa el token.
     const fechaStr = String(fecha);
     const chillerNo = Number(chiller);
@@ -35,6 +46,11 @@ async function cargarRegistro(usuario, fecha, chiller) {
 }
 
 async function guardarRegistroEnDB(registro) {
+    if (window.DEMO_MODE) {
+        localStorage.setItem(getDemoKey(registro.fecha, registro.chiller), JSON.stringify(registro));
+        return { ok: true, pendientes: [] };
+    }
+
     const body = {
         fecha: registro.fecha,
         chiller: registro.chiller,

@@ -616,6 +616,29 @@ async function terminarJornada() {
     }
 
     const hoy = formatLocalDateYMD(new Date());
+
+    if (window.DEMO_MODE) {
+        const otroChiller = chillerActual === 1 ? 3 : 1;
+        const otroRegistro = await cargarRegistro(currentUser.username, hoy, otroChiller);
+        if (!otroRegistro) {
+            alert('En la demo visual primero debes guardar tambien el otro chiller.');
+            return;
+        }
+
+        const actual = await cargarRegistro(currentUser.username, hoy, chillerActual);
+        const combinados = {
+            fecha: hoy,
+            chiller1: (actual?.chiller === 1 ? actual : otroRegistro),
+            chiller3: (actual?.chiller === 3 ? actual : otroRegistro)
+        };
+        const blob = await generarExcel(combinados);
+        descargarArchivo(blob, NOMBRE_EXCEL);
+        limpiarRegistrosDiaActual();
+        alert(`${construirMensajeGuardado('Jornada finalizada.')} Se descargo un Excel demo local.`);
+        window.location.href = 'main.html';
+        return;
+    }
+
     const token = sessionStorage.getItem('token');
     if (!token) {
         alert('Sesion expirada. Inicia sesion nuevamente.');

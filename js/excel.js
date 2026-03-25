@@ -158,3 +158,5 @@ async function generarExcel(datosCombinados) {
     const wbout = XLSX.write(wb, { bookType: 'xls', type: 'array' });
     return new Blob([wbout], { type: 'application/vnd.ms-excel' });
 }
+
+window.generarExcel = generarExcel;
