@@ -582,7 +582,7 @@ function irAlOtroChiller() {
 }
 
 async function guardarRegistro() {
-    actualizarPendientesVisuales({ abrirModal: true });
+    actualizarPendientesVisuales({ abrirModal: false });
     try {
         await guardarRegistroActual();
         alert(construirMensajeGuardado('Registro guardado correctamente.'));
@@ -593,7 +593,7 @@ async function guardarRegistro() {
 }
 
 async function irAlSiguiente() {
-    actualizarPendientesVisuales({ abrirModal: true });
+    actualizarPendientesVisuales({ abrirModal: false });
     try {
         await guardarRegistroActual();
         alert(construirMensajeGuardado('Registro guardado. Ahora ve al otro chiller.'));
